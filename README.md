@@ -49,8 +49,10 @@ like. It's a simple file where each line is of the form
    domain   username    password
 ```
 
-where `domain` is registered and google domains and `username` and `password`
-are the credentials provided there.
+where `domain` is registered with google domains and `username` and `password`
+are the credentials provided there for dynamic DNS updates.
+See [this guide](https://support.google.com/domains/answer/6147083) for
+details.
 Blank lines and comment lines (starting with `#`) are ignored.
 
 
