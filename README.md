@@ -13,7 +13,7 @@ for 99% of cases, no. for those cases (updating a single domain) the following
 
 ```sh
 ip=`curl -s ipinfo.io/ip`
-curl -s "https://YourUsername:YourPassword@domains.google.com/nic/update?hostname=YourDomain&myip=1.2.3.4
+curl -s "https://YourUsername:YourPassword@domains.google.com/nic/update?hostname=YourDomain&myip=${ip}"
 ```
 
 ## so then why this?
