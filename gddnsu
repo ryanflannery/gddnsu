@@ -1,48 +1,81 @@
 #!/bin/sh
 
-username=''
-password=''
-domain=''
+# ensure we have a config file
+if [ 1 -ne $# ];
+then
+   echo "usage: $0 /path/to/file"
+   exit 1
+fi
+configfile="$1"
+
+# and can read that config file
+if [ ! -r "$1" ];
+then
+   echo "$0: fatal error: can't read file '$1'"
+   exit 2
+fi
 
 # ensure we have curl
 which curl > /dev/null 2>&1
 if [ 0 -ne $? ];
 then
-   echo "$0: failed: can't find curl"
-   exit 1
+   echo "$0: fatal error: can't find curl"
+   exit 3
 fi
 
 # get our external ip
 ip=`curl -s ipinfo.io/ip`
 if [ 0 -ne $? ];
 then
-   echo "$0: failed: can't get ip"
+   echo "$0: error: can't get external ip"
    exit 2
 fi
 
-# update google domains ddns
-gdns="domains.google.com/nic/update"
-url="https://${username}:${password}@${gdns}?hostname=${domain}&myip=${ip}"
-response=`curl -s $url | awk '{print $1}'`
+# parse file and update
+while read line
+do
+   # skip comment rows
+   if [ "#-" == "${line%${line#?}}-" ];
+   then
+      continue
+   fi
 
-# parse response
-if [ 0 -ne $? ];
-then
-   echo "$0: failed: can't update google dynamic dns"
-   exit 3
-elif [ "good" == "${response}" ];
-then
-   echo "$0: succeeded: ip successfully changed to ${ip}"
-   exit 0
-elif [ "nochg" == "${response}" ];
-then
-   echo "$0: succeeded: no change in currently registered ip address"
-   exit 0
-else
-   echo "$0: failed: unknown error: output from google: '${response}'"
-   exit 4
-fi
+   set -- $line
 
-# this shouldn't be reached
-echo "$0: failed: somewhere, something when horribly wrong"
-exit 5
+   # skip blank lines
+   if [ 0 -eq $# ];
+   then
+      continue
+   fi
+
+   # skip malformed lines
+   if [ 3 -ne $# ];
+   then
+      echo "$0: error: malformed line '$line'. Skipping. See documentation."
+      continue
+   fi
+
+   # update google domains ddns
+   domain="$1"
+   username="$2"
+   password="$3"
+   gdns="domains.google.com/nic/update"
+   url="https://${username}:${password}@${gdns}?hostname=${domain}&myip=${ip}"
+   response=`curl -s $url | awk '{print $1}'`
+
+   # parse response
+   if [ 0 -ne $? ];
+   then
+      echo "$0: error: failed to update ${domain}: response: ${response}"
+   elif [ "good" == "${response}" ];
+   then
+      echo "$0: success: ${domain} changed to ${ip}"
+   elif [ "nochg" == "${response}" ];
+   then
+      echo "$0: success: no change to ${domain}"
+   else
+      echo "$0: error: failed to update ${domain}: response: ${response}"
+   fi
+
+done < "$configfile"
+
