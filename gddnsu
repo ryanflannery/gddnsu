@@ -16,23 +16,21 @@ then
 fi
 
 # ensure we have curl
-which curl > /dev/null 2>&1
-if [ 0 -ne $? ];
+if ! which curl > /dev/null 2>&1
 then
    echo "$0: fatal error: can't find curl"
    exit 3
 fi
 
 # get our external ip
-ip=`curl -s ipinfo.io/ip`
-if [ 0 -ne $? ];
+if ! ip=$(curl -s ipinfo.io/ip)
 then
    echo "$0: error: can't get external ip"
    exit 2
 fi
 
 # parse file and update
-while read line
+while read -r line
 do
    # skip comment rows
    if [ "#-" == "${line%${line#?}}-" ];
@@ -61,10 +59,9 @@ do
    password="$3"
    gdns="domains.google.com/nic/update"
    url="https://${username}:${password}@${gdns}?hostname=${domain}&myip=${ip}"
-   response=`curl -s $url | awk '{print $1}'`
 
    # parse response
-   if [ 0 -ne $? ];
+   if ! response=$(curl -s "$url" | awk '{print $1}')
    then
       echo "$0: error: failed to update ${domain}: response: ${response}"
    elif [ "good" == "${response}" ];
