@@ -72,7 +72,8 @@ do
       echo "$0: success: ${domain} changed to ${ip}"
    elif [ "nochg" == "${response}" ];
    then
-      echo "$0: success: no change to ${domain}"
+      #echo "$0: success: no change to ${domain}"
+      continue
    else
       echo "$0: error: failed to update ${domain}: response: ${response}"
    fi
